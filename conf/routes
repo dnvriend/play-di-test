@@ -1,1 +1,3 @@
-GET     /    com.github.dnvriend.component.foo.controller.FooController.get
+GET     /       com.github.dnvriend.component.foo.controller.FooController.get
+GET     /foo    com.github.dnvriend.component.foo.controller.FooController.get
+GET     /bar    com.github.dnvriend.component.bar.controller.BarController.get

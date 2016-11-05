@@ -1,18 +1,18 @@
 package com.github.dnvriend.component.foo
 
-import com.google.inject._
-import com.google.inject.name._
-import java.time.Clock
-import scala.concurrent._
-import scala.concurrent.duration._
-import play.api.libs.concurrent.AkkaGuiceSupport
-import play.api.{Configuration, Environment}
-import play.api.libs.ws._
-import com.github.dnvriend.component.foo.actor._
-import com.github.dnvriend.component.foo.service._
 import akka.actor._
 import akka.event._
 import akka.util.Timeout
+import com.github.dnvriend.component.foo.actor._
+import com.github.dnvriend.component.foo.service._
+import com.google.inject._
+import com.google.inject.name._
+import play.api.libs.concurrent.AkkaGuiceSupport
+import play.api.libs.ws._
+import play.api.{Configuration, Environment}
+
+import scala.concurrent._
+import scala.concurrent.duration._
 
 /**
  * This class is a Guice module that tells Guice how to bind several
