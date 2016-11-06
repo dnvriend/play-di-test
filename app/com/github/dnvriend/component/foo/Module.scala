@@ -21,7 +21,7 @@ import akka.event._
 import akka.util.Timeout
 import com.github.dnvriend.component.foo.actor._
 import com.github.dnvriend.component.foo.service._
-import com.google.inject._
+import com.google.inject.{Inject, _}
 import com.google.inject.name._
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.ws._
@@ -45,17 +45,27 @@ import scala.concurrent.duration._
  */
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with AkkaGuiceSupport {
   override def configure() = {
-    // bind ServiceB interface to the implementation, as alternative
-    // to annotations
-    bind(classOf[ServiceB]).to(classOf[ServiceBImpl]).asEagerSingleton
+    // bind ServiceB interface to the implementation, as alternative to annotations
+    bind(classOf[ServiceB]).to(classOf[ServiceBImpl]).asEagerSingleton()
     bind(classOf[ServiceC]).toProvider(classOf[ServiceCProvider])
-    bind(classOf[Timeout]).toProvider(classOf[TimeoutProvider])
-    bind(classOf[LoggingAdapter]).toProvider(classOf[LoggingAdapterProvider])
-    bind(classOf[ActorRef])
-      .annotatedWith(Names.named("foo-actor"))
-      .toProvider(classOf[FooActorProvider])
-      .asEagerSingleton()
+    //    bind(classOf[Timeout]).toProvider(classOf[TimeoutProvider])
+    //    bind(classOf[LoggingAdapter]).toProvider(classOf[LoggingAdapterProvider])
+    bind(classOf[Timeout]).toInstance(Timeout(10.seconds))
+    //    bind(classOf[ActorRef])
+    //      .annotatedWith(Names.named("foo-actor"))
+    //      .toProvider(classOf[FooActorProvider])
+    //      .asEagerSingleton()
+    bindActor[FooActor]("foo-actor")
   }
+
+  /**
+   * You don't really need this because Guice provides
+   * [[java.util.logging.Logger]] that can be injected
+   * into any class that needs a logger
+   */
+  @Provides
+  def loggingAdapter(system: ActorSystem): LoggingAdapter =
+    Logging(system, this.getClass)
 }
 
 @Singleton
@@ -64,20 +74,20 @@ class ServiceCProvider @Inject() (ws: WSClient)(implicit ec: ExecutionContext) e
   override def get(): ServiceC = instance
 }
 
-@Singleton
-class FooActorProvider @Inject() (system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
-  val instance = system.actorOf(Props(new FooActor))
-  override def get(): ActorRef = instance
-}
+//@Singleton
+//class FooActorProvider @Inject() (system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
+//  val instance = system.actorOf(Props(new FooActor))
+//  override def get(): ActorRef = instance
+//}
 
-@Singleton
-class TimeoutProvider extends Provider[Timeout] {
-  val instance = Timeout(10.seconds)
-  override def get(): Timeout = instance
-}
+//@Singleton
+//class TimeoutProvider extends Provider[Timeout] {
+//  val instance = Timeout(10.seconds)
+//  override def get(): Timeout = instance
+//}
 
-@Singleton
-class LoggingAdapterProvider @Inject() (system: ActorSystem) extends Provider[LoggingAdapter] {
-  val instance = Logging(system, this.getClass)
-  override def get(): LoggingAdapter = instance
-}
+//@Singleton
+//class LoggingAdapterProvider @Inject() (system: ActorSystem) extends Provider[LoggingAdapter] {
+//  val instance = Logging(system, this.getClass)
+//  override def get(): LoggingAdapter = instance
+//}

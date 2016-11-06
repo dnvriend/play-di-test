@@ -12,6 +12,9 @@ libraryDependencies ++= {
   val AkkaVersion = "2.4.12"
   Seq(
     ws,
+    "com.typesafe.play" %% "play-slick" % "2.0.0",
+    "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
+    "com.h2database" % "h2" % "1.4.193",
     "com.typesafe.akka" %% "akka-cluster" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-metrics" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-sharding" % AkkaVersion,

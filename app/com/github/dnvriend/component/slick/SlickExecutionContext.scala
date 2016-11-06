@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.foo.actor
+package com.github.dnvriend.component.slick
 
-import scala.concurrent._
-import akka.actor._
-import akka.event._
-import com.google.inject.Inject
+import scala.concurrent.ExecutionContext
 
-class FooActor @Inject() (implicit ec: ExecutionContext) extends Actor with ActorLogging {
-  println("Creating FooActor")
-  override def receive = LoggingReceive {
-    case str =>
-      log.info("Received: {}", str)
-      sender() ! str
-  }
+class SlickExecutionContext(ec: ExecutionContext) extends ExecutionContext {
+  override def execute(runnable: Runnable): Unit = ec.execute(runnable)
+  override def reportFailure(cause: Throwable): Unit = ec.reportFailure(cause)
 }

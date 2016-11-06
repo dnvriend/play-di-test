@@ -16,7 +16,9 @@
 
 package com.github.dnvriend.component.foo.service
 
+import java.util.logging.Logger
 import javax.inject._
+
 import scala.concurrent._
 import play.api.libs.ws._
 
@@ -24,8 +26,10 @@ trait ServiceB {
   def doB(): Future[Unit]
 }
 
-class ServiceBImpl @Inject() (ws: WSClient)(implicit ec: ExecutionContext) extends ServiceB {
+class ServiceBImpl @Inject() (ws: WSClient, logger: Logger)(implicit ec: ExecutionContext) extends ServiceB {
   println("Creating B")
-  override def doB(): Future[Unit] =
+  override def doB(): Future[Unit] = {
+    logger.info("Doing B")
     Future.successful(println("doing B"))
+  }
 }

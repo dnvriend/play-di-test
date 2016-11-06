@@ -18,7 +18,6 @@ package com.github.dnvriend.component.bar
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
-import akka.util.Timeout
 import com.github.dnvriend.component.bar.facade.BarFacade
 import com.github.dnvriend.component.bar.model.BarModel
 import com.google.inject._
@@ -40,7 +39,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   }
 }
 
-@Singleton
 class BarModelProvider @Inject() (facade: BarFacade, system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
   val instance: ActorRef = ClusterSharding(system).start(
     typeName = "Bar",
@@ -49,11 +47,4 @@ class BarModelProvider @Inject() (facade: BarFacade, system: ActorSystem)(implic
     messageExtractor = BarModel.messageExtractor(maxNumberOfShards = 15)
   )
   override def get(): ActorRef = instance
-}
-
-@Singleton
-class TimeoutProvider extends Provider[Timeout] {
-  val instance = Timeout(10.seconds)
-
-  override def get(): Timeout = instance
 }

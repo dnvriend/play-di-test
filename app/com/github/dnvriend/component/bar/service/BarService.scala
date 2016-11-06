@@ -17,10 +17,13 @@
 package com.github.dnvriend.component.bar
 package service
 
+import java.util.logging.Logger
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.util.Timeout
+import com.github.dnvriend.component.bar.dao.BarDao
 import com.google.inject._
 import com.google.inject.name.Named
 
@@ -33,8 +36,13 @@ trait BarService {
 }
 
 @Singleton
-class BarServiceImpl @Inject() (@Named("bar-model") barActor: ActorRef)(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer, timeout: Timeout) extends BarService {
+class BarServiceImpl @Inject() (@Named("bar-model") barActor: ActorRef, dao: BarDao, logger: Logger)(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer, timeout: Timeout) extends BarService {
   // poor man's typed actors
-  override def process(cmd: BarCommand): Future[BarEvent] =
-    (barActor ? MessageEnvelope(Random.nextInt(10).toString, DoBar(1))).mapTo[BarEvent]
+  override def process(cmd: BarCommand): Future[BarEvent] = for {
+    now <- dao.now
+    event <- (barActor ? MessageEnvelope(Random.nextInt(10).toString, DoBar(Random.nextInt(20)))).mapTo[BarEvent]
+  } yield {
+    println(s"[BarService] ==> According to H2, its now: $now, the received event is: $event")
+    event
+  }
 }
