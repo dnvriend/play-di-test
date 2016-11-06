@@ -18,7 +18,7 @@ import scala.concurrent.duration._
  * This class is a Guice module that tells Guice how to bind several
  * different types. This Guice module is created when the Play
  * application starts.
-
+ *
  * Play will automatically use any class called `Module` that is in
  * the root package. You can create modules in other locations by
  * adding `play.modules.enabled` settings to the `application.conf`
@@ -44,24 +44,24 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
 @Singleton
 class ServiceCProvider @Inject() (ws: WSClient)(implicit ec: ExecutionContext) extends Provider[ServiceC] {
-    val instance = new ServiceCImpl(ws) 
-    override def get(): ServiceC = instance             
+  val instance = new ServiceCImpl(ws)
+  override def get(): ServiceC = instance
 }
 
 @Singleton
 class FooActorProvider @Inject() (system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
-    val instance = system.actorOf(Props(new FooActor))
-    override def get(): ActorRef = instance         
+  val instance = system.actorOf(Props(new FooActor))
+  override def get(): ActorRef = instance
 }
 
 @Singleton
 class TimeoutProvider extends Provider[Timeout] {
-    val instance = Timeout(10.seconds)
-    override def get(): Timeout = instance
+  val instance = Timeout(10.seconds)
+  override def get(): Timeout = instance
 }
 
 @Singleton
 class LoggingAdapterProvider @Inject() (system: ActorSystem) extends Provider[LoggingAdapter] {
-    val instance = Logging(system, this.getClass) 
-    override def get(): LoggingAdapter = instance         
+  val instance = Logging(system, this.getClass)
+  override def get(): LoggingAdapter = instance
 }

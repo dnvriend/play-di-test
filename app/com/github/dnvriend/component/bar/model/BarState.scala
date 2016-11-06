@@ -1,4 +1,5 @@
-package com.github.dnvriend.component.bar.actor
+package com.github.dnvriend.component.bar
+package model
 
 final case class BarState(x: Int) {
   def handleEvent(event: BarEvent): BarState = event match {

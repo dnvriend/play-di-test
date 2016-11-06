@@ -18,10 +18,10 @@ trait FooFacade {
 
 @Singleton
 class FooFacadeImpl @Inject() (ws: WSClient, serviceA: ServiceA, serviceB: ServiceB, serviceC: ServiceC, @Named("foo-actor") fooActor: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout) extends FooFacade {
-    override def foo(): Future[Unit] = for {
-        _ <- serviceA.doA()
-        _ <- serviceB.doB()
-        _ <- serviceC.doC()
-        _ <- fooActor ? "foo"
-    } yield ()
+  override def foo(): Future[Unit] = for {
+    _ <- serviceA.doA()
+    _ <- serviceB.doB()
+    _ <- serviceC.doC()
+    _ <- fooActor ? "foo"
+  } yield ()
 }

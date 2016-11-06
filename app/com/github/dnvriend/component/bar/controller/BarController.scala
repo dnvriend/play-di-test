@@ -1,20 +1,19 @@
-package com.github.dnvriend.component.bar.controller
+package com.github.dnvriend.component.bar
+package controller
 
-import javax.inject._
+import com.google.inject._
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.ask
+import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.github.dnvriend.component.bar.actor.DoBar
-import com.google.inject.name.Named
+import com.github.dnvriend.component.bar.service.BarService
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class BarController @Inject()( @Named("bar-actor") barActor: ActorRef)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout = Timeout(10.seconds)) extends Controller {
+class BarController @Inject() (barService: BarService)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout = Timeout(10.seconds)) extends Controller {
   def get = Action.async {
-    (barActor ? DoBar(1)).map { result =>
+    barService.process(DoBar(1)).map { result =>
       Ok(result.toString)
     }
   }
