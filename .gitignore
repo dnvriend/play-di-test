@@ -6,4 +6,5 @@ target
 /.project
 /.settings
 /RUNNING_PID
-project/
+project/target/
+project/project/
