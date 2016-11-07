@@ -19,7 +19,8 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-cluster-metrics" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-sharding" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14"
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % Test
   )
 }
 
@@ -49,4 +50,18 @@ headers := headers.value ++ Map(
   "conf" -> Apache2_0("2016", "Dennis Vriend", "#")
 )
 
-enablePlugins(AutomateHeaderPlugin, SbtScalariform)
+// Declares endpoints. The default is Map("web" -> Endpoint("http", 0, Set.empty)).
+// The endpoint key is used to form a set of environment variables for your components,
+// e.g. for the endpoint key "web" ConductR creates the environment variable WEB_BIND_PORT.
+BundleKeys.endpoints := Map(
+  "play" -> Endpoint(bindProtocol = "http", bindPort = 0, services = Set(URI("http://:9000/play"))),
+  "akka-remote" -> Endpoint("tcp")
+)
+
+normalizedName in Bundle := "play-test" // the human readable name for your bundle
+
+BundleKeys.system := "PlayTestSystem" // represents the clustered ActorSystem
+
+BundleKeys.startCommand += "-Dhttp.address=$PLAY_BIND_IP -Dhttp.port=$PLAY_BIND_PORT -Dplay.akka.actor-system=$BUNDLE_SYSTEM"
+
+enablePlugins(AutomateHeaderPlugin, SbtScalariform, ConductrPlugin)

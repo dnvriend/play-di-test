@@ -22,7 +22,6 @@ import akka.util.Timeout
 import com.github.dnvriend.component.foo.actor._
 import com.github.dnvriend.component.foo.service._
 import com.google.inject.{Inject, _}
-import com.google.inject.name._
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.ws._
 import play.api.{Configuration, Environment}
@@ -60,7 +59,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   /**
    * You don't really need this because Guice provides
-   * [[java.util.logging.Logger]] that can be injected
+   * java.util.logging.Logger that can be injected
    * into any class that needs a logger
    */
   @Provides
