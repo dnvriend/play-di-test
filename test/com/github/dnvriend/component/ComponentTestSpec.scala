@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.bar
-package service
+package com.github.dnvriend.component
 
-import com.google.inject._
+import com.github.dnvriend.TestSpec
+import org.scalatestplus.play.WsScalaTestClient
 
-import scala.concurrent.Future
+abstract class ComponentTestSpec extends TestSpec with WsScalaTestClient {
 
-@ImplementedBy(classOf[BarServiceImpl])
-trait BarService {
-  def process(cmd: BarCommand): Future[BarEvent]
 }

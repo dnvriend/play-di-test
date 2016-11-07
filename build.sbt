@@ -20,6 +20,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-cluster-sharding" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
     "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14",
+    "org.mockito" % "mockito-core" % "2.2.12" % Test,
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % Test
   )
 }

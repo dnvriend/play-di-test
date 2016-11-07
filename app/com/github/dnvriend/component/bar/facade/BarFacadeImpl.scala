@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.bar
-package service
+package com.github.dnvriend.component.bar.facade
 
-import com.google.inject._
+import com.github.dnvriend.component.bar.{BarCommand, BarDone, BarEvent, DoBar}
+import com.google.inject.{Inject, Singleton}
+import play.api.libs.ws.WSClient
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
-@ImplementedBy(classOf[BarServiceImpl])
-trait BarService {
-  def process(cmd: BarCommand): Future[BarEvent]
+@Singleton
+private[facade] class BarFacadeImpl @Inject() (wsClient: WSClient)(implicit ec: ExecutionContext) extends BarFacade {
+  override def handleCommand(cmd: BarCommand): BarEvent = cmd match {
+    case DoBar(x) =>
+      // so some complicated logic here
+      // call some subsystems
+      // hey we're done!
+      BarDone(x)
+  }
 }

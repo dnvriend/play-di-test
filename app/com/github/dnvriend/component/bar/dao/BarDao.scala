@@ -46,7 +46,7 @@ trait BarDao {
  *          Therefore they are of type DBIO[Int].
  *  - tsql: Builds an invoker for a statement with computed types
  */
-class SlickBarDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: SlickExecutionContext) extends BarDao with HasDatabaseConfigProvider[JdbcProfile] {
+private[dao] class SlickBarDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: SlickExecutionContext) extends BarDao with HasDatabaseConfigProvider[JdbcProfile] {
   import driver.api._
   override def now: Future[String] =
     db.run(sql"""SELECT NOW()""".as[String]).map(_.head)

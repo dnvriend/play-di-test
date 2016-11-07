@@ -82,6 +82,17 @@ play {
 }
 ```
 
+## Controllers
+- __play.api.mvc.Controller__: Defines utility methods to generate `Action` and `Results` types.
+
+## Controller Helper Utilities
+- __play.api.mvc.Results__: A helper trait with utilities to generate results, is part of Controller
+- __play.api.mvc.BodyParsers__: A helper trait with utilities to parse http bodies, is part of Controller
+- __play.api.mvc.HttpProtocol__: A helper trait that defines HTTP protocol constants
+- __play.api.mvc.Status__: A helper trait that defines all standard HTTP status codes
+- __play.api.mvc.HeaderNames__: A helper trait that defines all standard HTTP headers
+- __play.api.mvc.ContentTypes__: A helper trait that defines common HTTP Content-Type header values, according to the current available Codec
+
 ## Dependency Injection with Guice
 With dependency injection, objects accept dependencies in their constructors. To construct an object, you first build its
 dependencies. But to build each dependency, you need its dependencies, and so on. So when you build an object, you really
@@ -134,6 +145,11 @@ play.modules {
 
 We add @Inject to the class constructor, which directs Guice to use it. Guice will inspect the annotated constructor,
 and lookup values for each parameter.
+
+## GuiceApplicationBuilder
+The `play.api.inject.guice.GuiceApplicationBuilder` provides a builder API for configuring the dependency
+injection and creation of a `play.api.Application`. The creation of such an Application is handled by the
+play framework itself and uses Guice. If you need a reference to to the current application, use dependency injection.
 
 ## Binding Annotations
 Occasionally you'll want multiple bindings for a same type. To enable this, bindings support an optional binding annotation.
@@ -802,4 +818,49 @@ Trait Assertions also provides:
 - __assertCompiles:__ to ensure a bit of code does compile
 - __assertTypeError:__ to ensure a bit of code does not compile because of a type (not parse) error
 - __withClue:__ to add more information about a failure
+
+## Testing with Guice
+If you’re using Guice for dependency injection then you can directly configure how components and 
+applications are created for tests. This includes adding extra bindings or overriding existing bindings.
+
+## Environment
+The Environment, or parts of the environment such as the `root path`, `mode`, or `class loader` for 
+an application, can be specified. The configured environment will be used for loading the 
+application configuration, it will be used when loading modules and passed when deriving 
+bindings from Play modules, and it will be injectable into other components.
+
+```scala
+import play.api.inject.guice.GuiceApplicationBuilder
+
+val application = new GuiceApplicationBuilder()
+  .in(Environment(new File("path/to/app"), classLoader, Mode.Test))
+  .build
+
+val application = new GuiceApplicationBuilder()
+  .in(new File("path/to/app"))
+  .in(Mode.Test)
+  .in(classLoader)
+  .build
+```
+
+## Configuration
+Additional configuration can be added. This configuration will always be in addition to the configuration 
+loaded automatically for the application. When existing keys are used the new configuration will be preferred.
+
+```scala
+val application = new GuiceApplicationBuilder()
+ .configure(Configuration("a" -> 1))
+ .configure(Map("b" -> 2, "c" -> "three"))
+ .configure("d" -> 4, "e" -> "five")
+ .build
+```
+
+The automatic loading of configuration from the application environment can also be overridden. 
+This will completely replace the application configuration. For example:
+
+```scala
+val application = new GuiceApplicationBuilder()
+ .loadConfig(env => Configuration.load(env))
+ .build
+```
 

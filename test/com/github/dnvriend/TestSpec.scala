@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.bar
-package service
+package com.github.dnvriend
 
-import com.google.inject._
+import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.Future
-
-@ImplementedBy(classOf[BarServiceImpl])
-trait BarService {
-  def process(cmd: BarCommand): Future[BarEvent]
-}
+abstract class TestSpec extends FlatSpec with Matchers
