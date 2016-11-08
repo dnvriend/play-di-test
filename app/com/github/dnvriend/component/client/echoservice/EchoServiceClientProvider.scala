@@ -18,12 +18,16 @@ package com.github.dnvriend.component.client.echoservice
 
 import javax.inject.Inject
 
+import akka.actor.ActorSystem
+import akka.pattern.CircuitBreaker
 import com.google.inject.Provider
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
-class EchoServiceClientProvider @Inject() (wsClient: WSClient)(implicit ec: ExecutionContext) extends Provider[EchoServiceClient] {
-  val instance: EchoServiceClient = new DefaultEchoServiceClient(wsClient)
+class EchoServiceClientProvider @Inject() (wsClient: WSClient)(implicit system: ActorSystem, ec: ExecutionContext) extends Provider[EchoServiceClient] {
+  val breaker = new CircuitBreaker(system.scheduler, 5, 10.seconds, 1.minute)
+  val instance: EchoServiceClient = new DefaultEchoServiceClient(wsClient, breaker)
   override def get(): EchoServiceClient = instance
 }
