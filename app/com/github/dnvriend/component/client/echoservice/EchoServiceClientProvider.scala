@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.component.client.echoservice
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import javax.inject.Inject
 
-abstract class TestSpec extends FlatSpec with Matchers with ScalaFutures
+import com.google.inject.Provider
+import play.api.libs.ws.WSClient
+
+import scala.concurrent.ExecutionContext
+
+class EchoServiceClientProvider @Inject() (wsClient: WSClient)(implicit ec: ExecutionContext) extends Provider[EchoServiceClient] {
+  val instance: EchoServiceClient = new DefaultEchoServiceClient(wsClient)
+  override def get(): EchoServiceClient = instance
+}

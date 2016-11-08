@@ -17,6 +17,7 @@
 package com.github.dnvriend.component.bar
 
 import akka.actor.ActorRef
+import com.github.dnvriend.component.client.echoservice.{EchoServiceClient, EchoServiceClientProvider}
 import com.google.inject._
 import com.google.inject.name.Names
 import play.api.libs.concurrent.AkkaGuiceSupport
@@ -29,6 +30,14 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[ActorRef])
       .annotatedWith(Names.named("bar-model"))
       .toProvider(classOf[BarModelProvider])
+      .asEagerSingleton()
+
+    //    bind(classOf[Boolean])
+    //      .annotatedWith(Names.named("clustered-bar-model"))
+    //      .toInstance(false)
+
+    bind(classOf[EchoServiceClient])
+      .toProvider(classOf[EchoServiceClientProvider])
       .asEagerSingleton()
   }
 }

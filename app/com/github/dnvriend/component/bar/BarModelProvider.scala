@@ -26,11 +26,13 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
 class BarModelProvider @Inject() (facade: BarFacade, system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
-  val instance: ActorRef = ClusterSharding(system).start(
-    typeName = "Bar",
-    entityProps = Props(classOf[BarModel], "Bar", facade, Duration("10s"), ec),
-    settings = ClusterShardingSettings(system),
-    messageExtractor = BarModel.messageExtractor(maxNumberOfShards = 15)
-  )
+  val instance: ActorRef = if (system.settings.config.getString("akka.actor.provider").contains("ClusterActorRefProvider")) {
+    ClusterSharding(system).start(
+      typeName = "Bar",
+      entityProps = Props(classOf[BarModel], "Bar", facade, Duration("10s"), ec),
+      settings = ClusterShardingSettings(system),
+      messageExtractor = BarModel.messageExtractor(maxNumberOfShards = 15)
+    )
+  } else system.actorOf(Props(new BarModel("Bar", facade, Duration.Inf)))
   override def get(): ActorRef = instance
 }

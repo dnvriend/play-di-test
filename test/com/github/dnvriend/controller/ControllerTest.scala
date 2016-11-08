@@ -31,8 +31,8 @@ class ExampleController extends Controller {
 }
 
 import play.api.mvc._
-import play.api.test._
 import play.api.test.Helpers._
+import play.api.test._
 
 class ControllerTest extends TestSpec with OneAppPerTest with Results {
   "Example page index" should "be valid" in {

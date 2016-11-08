@@ -21,16 +21,20 @@ import com.google.inject._
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.github.dnvriend.component.bar.service.BarService
+import com.github.dnvriend.component.client.echoservice.EchoServiceClient
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.Random
 
-class BarController @Inject() (barService: BarService)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout = Timeout(10.seconds)) extends Controller {
+class BarController @Inject() (barService: BarService, echoServiceClient: EchoServiceClient)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout = Timeout(10.seconds)) extends Controller {
   def get = Action.async {
-    barService.process(DoBar(1)).map {
-      case event: BarDone => Ok(Json.toJson(event))
+    echoServiceClient.basicAuth("foo", "bar").flatMap { status =>
+      barService.process(DoBar(Random.nextInt(99) + status)).map {
+        case event: BarDone => Ok(Json.toJson(event))
+      }
     }
   }
 }

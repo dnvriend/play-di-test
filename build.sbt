@@ -27,6 +27,10 @@ libraryDependencies ++= {
 
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
+fork in Test := true
+
+parallelExecution in Test := false
+
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 

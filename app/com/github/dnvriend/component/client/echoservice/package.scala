@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.component.client
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
-
-abstract class TestSpec extends FlatSpec with Matchers with ScalaFutures
+package object echoservice {
+  final val Host = "httpbin.org"
+  def getUrl(path: String, tls: Boolean = false): String =
+    if (tls) s"https://$Host:443$path" else s"http://$Host$path"
+}

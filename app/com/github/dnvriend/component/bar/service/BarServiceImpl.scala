@@ -23,7 +23,7 @@ import akka.pattern.ask
 import akka.stream.Materializer
 import akka.util.Timeout
 import com.github.dnvriend.component.bar.dao.BarDao
-import com.github.dnvriend.component.bar.{BarCommand, BarEvent, DoBar, MessageEnvelope}
+import com.github.dnvriend.component.bar.{BarCommand, BarEvent, MessageEnvelope}
 import com.google.inject.name.Named
 import com.google.inject.{Inject, Singleton}
 

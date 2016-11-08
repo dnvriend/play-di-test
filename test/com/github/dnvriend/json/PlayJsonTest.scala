@@ -17,17 +17,14 @@
 package com.github.dnvriend.json
 
 import com.github.dnvriend.TestSpec
+import com.github.dnvriend.model.Person
 import play.api.libs.json.Json
 
-object Person {
-  implicit val format = Json.format[Person]
-}
-
-final case class Person(name: String, age: Int)
-
 class PlayJsonTest extends TestSpec {
+  final val JsonString = """{"name":"foo","age":25}"""
+
   it should "marshall Person" in {
-    Json.toJson(Person("foo", 25)).toString() shouldBe """{"name":"foo","age":25}"""
+    Json.toJson(Person("foo", 25)).toString() shouldBe JsonString
   }
 
   it should "marshal Option.empty[Person]" in {
@@ -35,7 +32,7 @@ class PlayJsonTest extends TestSpec {
   }
 
   it should "marshal Some(Person)" in {
-    Json.toJson(Some(Person("foo", 25))).toString shouldBe """{"name":"foo","age":25}"""
+    Json.toJson(Some(Person("foo", 25))).toString shouldBe JsonString
   }
 
   it should "marshal a List.empty[Person]" in {
@@ -44,5 +41,9 @@ class PlayJsonTest extends TestSpec {
 
   it should "marshal a List[Person]" in {
     Json.toJson(List(Person("foo", 25), Person("bar", 30))).toString shouldBe """[{"name":"foo","age":25},{"name":"bar","age":30}]"""
+  }
+
+  it should "unmarshal JSON to Person" in {
+    Json.parse(JsonString).as[Person] shouldBe Person("foo", 25)
   }
 }

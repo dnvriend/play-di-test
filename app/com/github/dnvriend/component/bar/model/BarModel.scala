@@ -68,5 +68,16 @@ class BarModel(pidName: String, facade: BarFacade, receiveTimeout: Duration)(imp
     case Stop =>
       println(s"[$persistenceId] ==> Stopping, state is: $state")
       context.stop(self)
+
+    case env @ MessageEnvelope(_, cmd) =>
+      println(s"[$persistenceId] ==> Received message envelope, $env forwarding to self, state is: $state")
+      self forward cmd
+
+    case msg =>
+      println(s"[$persistenceId] ==> Dropping, msg $msg, state is: $state")
+  }
+
+  override def postStop(): Unit = {
+    println(s"[$persistenceId] ==> I'm Stopped, state is: $state")
   }
 }

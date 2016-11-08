@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.model
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.Json
 
-abstract class TestSpec extends FlatSpec with Matchers with ScalaFutures
+object Person {
+  implicit val format = Json.format[Person]
+}
+
+final case class Person(name: String, age: Int)

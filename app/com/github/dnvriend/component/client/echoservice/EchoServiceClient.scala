@@ -14,9 +14,30 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.component.client.echoservice
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.Format
 
-abstract class TestSpec extends FlatSpec with Matchers with ScalaFutures
+import scala.concurrent.Future
+
+trait EchoServiceClient {
+  def get(): Future[Int]
+
+  def getTls(): Future[Int]
+
+  def basicAuth(username: String, password: String): Future[Int]
+
+  def basicAuthTls(username: String, password: String): Future[Int]
+
+  def post[A: Format](a: A): Future[Int]
+
+  def postTls[A: Format](a: A): Future[Int]
+
+  def put[A: Format](a: A): Future[Int]
+
+  def delete(): Future[Int]
+
+  def patch[A: Format](a: A): Future[Int]
+
+  def echo[A: Format](a: A): Future[A]
+}
