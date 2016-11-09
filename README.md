@@ -34,6 +34,7 @@ classes:
 - [Google Guice Wiki](https://github.com/google/guice/wiki)
 - [Guice vs Spring](https://github.com/google/guice/wiki/SpringComparison)
 - [Guicing up your testing - Dick Wall](http://www.developer.com/design/article.php/3684656/Guicing-Up-Your-Testing.htm)
+- [StackOverflow - Should Guice Providers with expensive member instances as be annotated with @Singleton?](http://stackoverflow.com/questions/20473606/should-guice-providers-with-expensive-member-instances-as-be-annotated-with-sin)
 
 ## Environment and Configuration
 The `play.api.Environment` class that can be provided by Module The environment The environment for the application.
