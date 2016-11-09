@@ -19,73 +19,72 @@ package com.github.dnvriend.component.client.echoservice
 import javax.inject.Inject
 
 import akka.pattern.CircuitBreaker
+import com.github.dnvriend.component.client.wsclient.WsClientProxy
 import play.api.libs.json.{Format, Json}
-import play.api.libs.ws.{WSAuthScheme, WSClient}
+import play.api.libs.ws.WSAuthScheme
 
 import scala.concurrent.{ExecutionContext, Future}
 
-private[echoservice] class DefaultEchoServiceClient @Inject() (wsClient: WSClient, breaker: CircuitBreaker)(implicit ec: ExecutionContext) extends EchoServiceClient {
+private[echoservice] class DefaultEchoServiceClient @Inject() (wsClient: WsClientProxy, breaker: CircuitBreaker)(implicit ec: ExecutionContext) extends EchoServiceClient {
   override def get(): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/get"))
-        .get().map(_.status)
+        .flatMap(_.get().map(_.status))
     )
 
   override def getTls(): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/get", tls = true))
-        .get().map(_.status)
+        .flatMap(_.get().map(_.status))
     )
 
   override def basicAuth(username: String, password: String): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/basic-auth/foo/bar"))
-        .withAuth(username, password, WSAuthScheme.BASIC)
-        .get().map(_.status)
+        .flatMap(_.withAuth(username, password, WSAuthScheme.BASIC).get().map(_.status))
     )
 
   override def basicAuthTls(username: String, password: String): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/basic-auth/foo/bar", tls = true))
-        .withAuth(username, password, WSAuthScheme.BASIC)
-        .get().map(_.status)
+        .flatMap(_.withAuth(username, password, WSAuthScheme.BASIC).get().map(_.status))
     )
 
   override def post[A: Format](a: A): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/post"))
-        .post(Json.toJson(a)).map(_.status)
+        .flatMap(_.post(Json.toJson(a)).map(_.status))
     )
 
   override def postTls[A: Format](a: A): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/post", tls = true))
-        .post(Json.toJson(a)).map(_.status)
+        .flatMap(_.post(Json.toJson(a)).map(_.status))
     )
 
   override def put[A: Format](a: A): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/put"))
-        .put(Json.toJson(a)).map(_.status)
+        .flatMap(_.put(Json.toJson(a)).map(_.status))
     )
 
   override def delete(): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/delete"))
-        .delete().map(_.status)
+        .flatMap(_.delete().map(_.status))
     )
 
   override def patch[A: Format](a: A): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/patch"))
-        .patch(Json.toJson(a)).map(_.status)
+        .flatMap(_.patch(Json.toJson(a)).map(_.status))
     )
 
   override def echo[A: Format](a: A): Future[A] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/post"))
-        .post(Json.toJson(a))
-        .map(response => (response.json \ "data").as[String])
-        .map(jsonString => Json.parse(jsonString).as[A])
+        .flatMap(_.post(Json.toJson(a))
+          .map(response => (response.json \ "data").as[String])
+          .map(jsonString => Json.parse(jsonString).as[A]))
     )
 }

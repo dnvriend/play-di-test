@@ -14,36 +14,40 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.foo
+package com.github.dnvriend
 
-import akka.actor._
-import akka.event._
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
-import com.github.dnvriend.component.foo.actor._
-import com.github.dnvriend.component.foo.service._
-import com.google.inject.{Inject, _}
+import com.github.dnvriend.component.bar.BarModelProvider
+import com.github.dnvriend.component.client.echoservice.{EchoServiceClient, EchoServiceClientProvider}
+import com.github.dnvriend.component.foo.ServiceCProvider
+import com.github.dnvriend.component.foo.actor.FooActor
+import com.github.dnvriend.component.foo.service.{ServiceB, ServiceBImpl, ServiceC}
+import com.github.dnvriend.component.slick.SlickExecutionContext
+import com.google.inject.{AbstractModule, Provides}
+import com.google.inject.name.Names
 import play.api.libs.concurrent.AkkaGuiceSupport
-import play.api.libs.ws._
-import play.api.{Configuration, Environment}
 
-import scala.concurrent._
 import scala.concurrent.duration._
 
-/**
- * This class is a Guice module that tells Guice how to bind several
- * different types. This Guice module is created when the Play
- * application starts.
- *
- * Play will automatically use any class called `Module` that is in
- * the root package. You can create modules in other locations by
- * adding `play.modules.enabled` settings to the `application.conf`
- * configuration file.
- *
- * environment: The environment for the application. Captures concerns relating to the classloader and the filesystem for the application.
- * configuration: The typesafe configuration
- */
-class Module(environment: Environment, configuration: Configuration) extends AbstractModule with AkkaGuiceSupport {
-  override def configure() = {
+class Module extends AbstractModule with AkkaGuiceSupport {
+  override def configure(): Unit = {
+    // bind ServiceB interface to the implementation, as alternative
+    // to annotations
+    bind(classOf[ActorRef])
+      .annotatedWith(Names.named("bar-model"))
+      .toProvider(classOf[BarModelProvider])
+      .asEagerSingleton()
+
+    //    bind(classOf[Boolean])
+    //      .annotatedWith(Names.named("clustered-bar-model"))
+    //      .toInstance(false)
+
+    bind(classOf[EchoServiceClient])
+      .toProvider(classOf[EchoServiceClientProvider])
+      .asEagerSingleton()
+
     // bind ServiceB interface to the implementation, as alternative to annotations
     bind(classOf[ServiceB]).to(classOf[ServiceBImpl]).asEagerSingleton()
     bind(classOf[ServiceC]).toProvider(classOf[ServiceCProvider])
@@ -63,29 +67,29 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
    * into any class that needs a logger
    */
   @Provides
-  def loggingAdapter(system: ActorSystem): LoggingAdapter =
+  def loggingAdapter(system: ActorSystem): LoggingAdapter = {
+    println(" !! ==> !! Providing a LoggingAdapter")
     Logging(system, this.getClass)
+  }
+
+  @Provides
+  def slickExecutionContextProvider(system: ActorSystem): SlickExecutionContext = {
+    println(" !! ==> !! Providing a SlickExecutionContext")
+    val ec = system.dispatchers.lookup("slick.database-dispatcher")
+    new SlickExecutionContext(ec)
+  }
 }
 
-@Singleton
-class ServiceCProvider @Inject() (ws: WSClient)(implicit ec: ExecutionContext) extends Provider[ServiceC] {
-  val instance = new ServiceCImpl(ws)
-  override def get(): ServiceC = instance
-}
-
-//@Singleton
 //class FooActorProvider @Inject() (system: ActorSystem)(implicit ec: ExecutionContext) extends Provider[ActorRef] {
 //  val instance = system.actorOf(Props(new FooActor))
 //  override def get(): ActorRef = instance
 //}
 
-//@Singleton
 //class TimeoutProvider extends Provider[Timeout] {
 //  val instance = Timeout(10.seconds)
 //  override def get(): Timeout = instance
 //}
 
-//@Singleton
 //class LoggingAdapterProvider @Inject() (system: ActorSystem) extends Provider[LoggingAdapter] {
 //  val instance = Logging(system, this.getClass)
 //  override def get(): LoggingAdapter = instance

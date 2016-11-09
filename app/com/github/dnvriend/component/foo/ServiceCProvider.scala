@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend.component.slick
+package com.github.dnvriend.component.foo
 
-import akka.actor.ActorSystem
-import com.google.inject.{AbstractModule, Provides}
-import play.api.{Configuration, Environment}
+import com.github.dnvriend.component.foo.service.{ServiceC, ServiceCImpl}
+import com.google.inject.{Inject, Provider}
+import play.api.libs.ws.WSClient
 
-class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
-  override def configure(): Unit = ()
+import scala.concurrent.ExecutionContext
 
-  @Provides
-  def slickExecutionContextProvider(system: ActorSystem): SlickExecutionContext = {
-    val ec = system.dispatchers.lookup("slick.database-dispatcher")
-    new SlickExecutionContext(ec)
+class ServiceCProvider @Inject() (ws: WSClient)(implicit ec: ExecutionContext) extends Provider[ServiceC] {
+  override def get(): ServiceC = {
+    println(" !! ==> !! Providing a ServiceC")
+    new ServiceCImpl(ws)
   }
 }
