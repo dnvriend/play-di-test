@@ -295,6 +295,42 @@ class BarController @Inject()(@NamedDatabase("<db-name>") dbConfigProvider: Data
 
 Of course, you should replace the string "<db-name>" with the name of the database’s configuration you want to use.
 
+## Component lifecycle
+The dependency injection system manages the lifecycle of injected components, creating them as needed and injecting
+them into other components. Here’s how component lifecycle works:
+
+## By default new instances are created
+New instances are created every time a component is needed. If a component is used more than once, then, by default,
+multiple instances of the component will be created. If you only want a single instance of a component then you need
+to mark it as a singleton.
+
+```scala
+import javax.inject._
+
+@Singleton
+class CurrentSharePrice {
+  @volatile private var price = 0
+
+  def set(p: Int) = price = p
+  def get = price
+}
+```
+
+## Instances are created lazily
+Instances are created lazily when they are needed. If a component is never used by another component, 
+then it won’t be created at all. This is usually what you want. For most components there’s no point creating them until 
+they’re needed. However, in some cases you want components to be started up straight away or even if they’re not used by 
+another component. For example, you might want to send a message to a remote system or warm up a cache when the application
+starts. You can force a component to be created eagerly by using an eager binding.
+
+## Instances are not shut down
+Instances are not automatically cleaned up, beyond normal garbage collection. Components will be garbage collected when 
+they’re no longer referenced, but the framework won’t do anything special to shut down the component, 
+like calling a close method. However, Play provides a special type of component, called the `ApplicationLifecycle` 
+which lets you register components to shut down when the application stops.
+
+
+
 ## ConductR
 [Lightbend ConductR](https://conductr.lightbend.com/) is for managing microservices with the "batteries included".
 
@@ -865,3 +901,83 @@ val application = new GuiceApplicationBuilder()
  .build
 ```
 
+
+Jan Galinski: See [gist](https://gist.github.com/jangalinski/4943871)
+Example providers:
+
+```java
+package sof14839561;
+
+import static com.google.inject.Guice.createInjector;
+import static com.google.inject.name.Names.named;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.junit.Test;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+
+public class NamedProviderTest extends AbstractModule {
+
+    public static interface Foo {
+
+        String foo();
+    }
+
+    public static class FooProvider implements Provider<Foo> {
+
+        @Override
+        public Foo get() {
+            return new Foo() {
+
+                @Override
+                public String foo() {
+                    return "foo";
+                }
+            };
+        }
+
+    }
+
+    public static class FooPrimeProvider implements Provider<Foo> {
+
+        @Override
+        public Foo get() {
+            return new Foo() {
+
+                @Override
+                public String foo() {
+                    return "prime";
+                }
+            };
+        }
+
+    }
+
+    @Inject
+    public Provider<Foo> fooProvider;
+
+    @Inject
+    @Named("prime")
+    public Provider<Foo> fooPrimeProvider;
+
+    @Test
+    public void shouldInjectFooAndPrime() {
+        createInjector(this).injectMembers(this);
+
+        assertThat(fooPrimeProvider.get().foo(), is("prime"));
+        assertThat(fooProvider.get().foo(), is("foo"));
+    }
+
+    @Override
+    protected void configure() {
+        bind(Foo.class).toProvider(FooProvider.class);
+        bind(Foo.class).annotatedWith(named("prime")).toProvider(FooPrimeProvider.class);
+    }
+
+}
+```

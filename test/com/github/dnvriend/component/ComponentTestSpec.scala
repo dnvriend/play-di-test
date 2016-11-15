@@ -18,11 +18,12 @@ package com.github.dnvriend.component
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
 import akka.stream.{ActorMaterializer, Materializer}
+import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.github.dnvriend.TestSpec
 import org.scalatest.BeforeAndAfterAll
@@ -51,6 +52,15 @@ abstract class ComponentTestSpec extends TestSpec with BeforeAndAfterAll {
   implicit class SourceOps[A](src: Source[A, _]) {
     def testProbe(f: TestSubscriber.Probe[A] => Unit): Unit =
       f(src.runWith(TestSink.probe(system)))
+  }
+
+  def killActors(actors: ActorRef*): Unit = {
+    val tp = TestProbe()
+    actors.foreach { (actor: ActorRef) =>
+      tp watch actor
+      actor ! PoisonPill
+      tp.expectTerminated(actor)
+    }
   }
 
   override protected def beforeAll(): Unit = {
