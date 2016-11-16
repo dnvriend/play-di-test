@@ -18,23 +18,16 @@ package com.github.dnvriend.controller
 
 import akka.stream.Materializer
 import com.github.dnvriend.TestSpec
-import org.scalatestplus.play.OneAppPerTest
+import com.github.dnvriend.component.ControllerSpec
+import com.github.dnvriend.controller.mock.ExampleController
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Controller, Results}
-
-import scala.concurrent.Future
-
-class ExampleController extends Controller {
-  def index() = Action {
-    Ok("ok")
-  }
-}
-
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
 
-class ControllerTest extends TestSpec with OneAppPerTest with Results {
+import scala.concurrent.Future
+
+class ControllerTest extends ControllerSpec {
   "Example page index" should "be valid" in {
     val controller = new ExampleController()
     val result: Future[Result] = controller.index().apply(FakeRequest())
@@ -45,7 +38,7 @@ class ControllerTest extends TestSpec with OneAppPerTest with Results {
   /**
    * An EssentialAction underlies every Action.
    * Given a RequestHeader, an EssentialAction consumes
-   * the request body (an ByteString) and returns a Result.
+   * the request body (a ByteString) and returns a Result.
    *
    * An EssentialAction is a Handler, which means
    * it is one of the objects that Play uses to handle requests.
@@ -57,8 +50,6 @@ class ControllerTest extends TestSpec with OneAppPerTest with Results {
     }
 
     val request = FakeRequest(POST, "/").withJsonBody(Json.parse("""{ "field": "value" }"""))
-
-    implicit lazy val mat: Materializer = app.materializer
     val result = call(action, request)
 
     status(result) shouldBe OK

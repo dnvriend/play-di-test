@@ -12,18 +12,19 @@ libraryDependencies ++= {
   val AkkaVersion = "2.4.12"
   Seq(
     ws,
-    "com.typesafe.play" %% "play-slick" % "2.0.0",
-    "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
+    "com.typesafe.play" %% "play-slick" % "2.0.2",
+    "com.typesafe.play" %% "play-slick-evolutions" % "2.0.2",
     "com.h2database" % "h2" % "1.4.193",
     "com.typesafe.akka" %% "akka-cluster" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-metrics" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-sharding" % AkkaVersion,
     "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
-    "com.pauldijou" %% "jwt-core" % "0.9.0",
-    "com.pauldijou" %% "jwt-play-json" % "0.9.0",
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14",
-    "org.mockito" % "mockito-core" % "2.2.12" % Test,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % Test
+    "com.pauldijou" %% "jwt-core" % "0.9.2",
+    "com.pauldijou" %% "jwt-play-json" % "0.9.2",
+    "org.scalaz" %% "scalaz-core" % "7.2.7",
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14" % Test,
+    "org.mockito" % "mockito-core" % "2.2.16" % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
   )
 }
 

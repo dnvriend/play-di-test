@@ -16,7 +16,7 @@
 
 package com.github.dnvriend.component.client.jwt
 
-import com.github.dnvriend.Base64Ops._
+import com.github.dnvriend.util.Base64Ops._
 import com.github.dnvriend.component.client.ClientTestSpec
 import com.github.dnvriend.component.client.jwt.model.{Session, Token}
 import com.github.dnvriend.component.client.mock.{MockRequest, MockResponse}

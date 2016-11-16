@@ -17,14 +17,24 @@
 package com.github.dnvriend.json
 
 import com.github.dnvriend.TestSpec
-import com.github.dnvriend.model.Person
-import play.api.libs.json.Json
+import com.github.dnvriend.model.{Foo, Person}
+import play.api.data.validation.ValidationError
+import play.api.libs.json._
 
+// https://www.playframework.com/documentation/2.5.x/ScalaJson
 class PlayJsonTest extends TestSpec {
   final val JsonString = """{"name":"foo","age":25}"""
 
-  it should "marshall Person" in {
+  it should "convert to Json AST" in {
+    Json.toJson(Person("foo", 25)) shouldBe a[JsValue]
+  }
+
+  it should "marshall Person to json string" in {
     Json.toJson(Person("foo", 25)).toString() shouldBe JsonString
+  }
+
+  it should "marshall Person to json string with stringify" in {
+    Json.stringify(Json.toJson(Person("foo", 25))) shouldBe JsonString
   }
 
   it should "marshal Option.empty[Person]" in {
@@ -46,4 +56,81 @@ class PlayJsonTest extends TestSpec {
   it should "unmarshal JSON to Person" in {
     Json.parse(JsonString).as[Person] shouldBe Person("foo", 25)
   }
+
+  it should "unmarshal JSON to Option[Person]" in {
+    Json.parse(JsonString).asOpt[Person] shouldBe Option(Person("foo", 25))
+  }
+
+  it should "unmarshal JSON to Option[Foo] but fails with None" in {
+    Json.parse(JsonString).asOpt[Foo] shouldBe None
+  }
+
+  it should "create a new Json structure" in {
+    val json: JsValue = Json.parse(JsonString)
+    Json.stringify(JsObject(Seq("data" -> json))) shouldBe """{"data":{"name":"foo","age":25}}"""
+  }
+
+  it should "parse watership down" in {
+    Json.parse(
+      """
+        |{
+        |  "name" : "Watership Down",
+        |  "location" : {
+        |    "lat" : 51.235685,
+        |    "long" : -1.309197
+        |  },
+        |  "residents" : [ {
+        |    "name" : "Fiver",
+        |    "age" : 4,
+        |    "role" : null
+        |  }, {
+        |    "name" : "Bigwig",
+        |    "age" : 6,
+        |    "role" : "Owsla"
+        |  } ]
+        |}
+      """.stripMargin
+    ) shouldBe a[JsValue]
+
+    JsObject(Seq(
+      "name" -> JsString("Watership Down"),
+      "location" -> JsObject(Seq("lat" -> JsNumber(51.235685), "long" -> JsNumber(-1.309197))),
+      "residents" -> JsArray(Seq(
+        JsObject(Seq(
+          "name" -> JsString("Fiver"),
+          "age" -> JsNumber(4),
+          "role" -> JsNull
+        )),
+        JsObject(Seq(
+          "name" -> JsString("Bigwig"),
+          "age" -> JsNumber(6),
+          "role" -> JsString("Owsla")
+        ))
+      ))
+    )) shouldBe a[JsValue]
+
+    Json.obj(
+      "name" -> "Watership Down",
+      "location" -> Json.obj("lat" -> 51.235685, "long" -> -1.309197),
+      "residents" -> Json.arr(
+        Json.obj(
+          "name" -> "Fiver",
+          "age" -> 4,
+          "role" -> JsNull
+        ),
+        Json.obj(
+          "name" -> "Bigwig",
+          "age" -> 6,
+          "role" -> "Owsla"
+        )
+      )
+    ) shouldBe a[JsValue]
+  }
+
+//  it should "be an applicative" in {
+//    val validJson = """{"name":"foo","age":25}"""
+//    Json.parse(validJson).validate[Person] shouldBe JsSuccess(Person("foo", 25))
+//    val invalidJson = """{"name":"foo","age":"bar"}"""
+//    Json.parse(invalidJson).validate[Person] shouldBe a[JsError]
+//  }
 }

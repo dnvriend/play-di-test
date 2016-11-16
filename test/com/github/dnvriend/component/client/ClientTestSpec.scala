@@ -27,7 +27,7 @@ import com.github.dnvriend.component.client.mock.MockWsClientProxy
 import pdi.jwt.JwtAlgorithm
 import play.api.libs.json.{Format, Json}
 import play.api.libs.ws.WSResponse
-import com.github.dnvriend.Base64Ops._
+import com.github.dnvriend.util.Base64Ops._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
