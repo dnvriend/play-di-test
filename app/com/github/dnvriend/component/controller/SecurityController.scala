@@ -24,6 +24,8 @@ import com.google.inject.Inject
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
+import scalaz._
+import Scalaz._
 
 object JwtSecurity {
   implicit val format = Json.format[JwtSecurity]
@@ -70,19 +72,33 @@ class SecurityController @Inject() (security: Security) extends Controller {
 
   def testToken = Action { request =>
     logger.info("Testing your jwtToken with publicKey")
-    request.body.asJson.map(_.as[TestToken]).flatMap { testToken =>
-      logger.info("Got token: " + testToken)
-      security.decode(testToken.token, testToken.publicKey).map { jwtClaim =>
-        logger.info("Got jwtClaim " + jwtClaim)
-        jwtClaim.expiration.foreach { time =>
-          logger.info(s"it will expire at ${SecurityController.format(time)}")
-        }
+    // The effect we want to capture is the 'Disjunction', it can be either left or right
+    val theEffectMaterializedAsDisjunction: Disjunction[String, Result] = for {
+      testToken <- request.body.asJson.map(_.as[TestToken]).toRightDisjunction("Could not unmarshal TestToken")
+      jwtClaim <- security.decode(testToken.token, testToken.publicKey)
+        .recoverWith {
+          case t: Throwable =>
+            logger.error("Could not decode JwtToken", t)
+            scala.util.Failure(t)
+        }.toDisjunction
+        .leftMap[String](t => s"There is a problem decoding the token: '$t'")
+      expirationTime <- jwtClaim.expiration.toRightDisjunction("The JwtClaim has no expiration configured")
+    } yield {
+      logger.info("Got jwtClaim " + jwtClaim)
+      logger.info(s"it will expire at ${SecurityController.format(expirationTime)}")
+      if (security.isExpired(jwtClaim)) {
+        logger.warn(s"Your token has been expired since: ${SecurityController.format(expirationTime)}")
+        BadRequest(s"Your token has been expired since: ${SecurityController.format(expirationTime)}")
+      } else {
         logger.info("Your token seems fine, put the publicKey in a .pub file")
         Ok(Json.toJson(testToken))
-      }.recover {
-        case t: Throwable =>
-          BadRequest("Test failed: " + t.getMessage)
-      }.toOption
-    }.getOrElse(InternalServerError("Unknown error"))
+      }
+    }
+
+    // observe the effect and react appropriately
+    theEffectMaterializedAsDisjunction match {
+      case DRight(result) => result
+      case DLeft(validation) => BadRequest(validation)
+    }
   }
 }
