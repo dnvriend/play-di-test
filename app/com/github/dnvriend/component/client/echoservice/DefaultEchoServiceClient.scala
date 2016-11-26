@@ -20,12 +20,15 @@ import javax.inject.Inject
 
 import akka.pattern.CircuitBreaker
 import com.github.dnvriend.component.client.wsclient.WsClientProxy
+import play.api.Logger
 import play.api.libs.json.{Format, Json}
 import play.api.libs.ws.WSAuthScheme
 
 import scala.concurrent.{ExecutionContext, Future}
 
-private[echoservice] class DefaultEchoServiceClient @Inject() (wsClient: WsClientProxy, breaker: CircuitBreaker)(implicit ec: ExecutionContext) extends EchoServiceClient {
+class DefaultEchoServiceClient @Inject() (wsClient: WsClientProxy, breaker: CircuitBreaker)(implicit ec: ExecutionContext) extends EchoServiceClient {
+  val logger = Logger(this.getClass)
+
   override def get(): Future[Int] =
     breaker.withCircuitBreaker(
       wsClient.url(getUrl("/get"))

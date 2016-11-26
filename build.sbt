@@ -22,10 +22,12 @@ libraryDependencies ++= {
     "com.pauldijou" %% "jwt-core" % "0.9.2",
     "com.pauldijou" %% "jwt-play-json" % "0.9.2",
     "com.github.nscala-time" %% "nscala-time" % "2.14.0",
-    "org.scalaz" %% "scalaz-core" % "7.2.7",
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14" % Test,
+    "com.pauldijou" %% "jwt-play-json" % "0.9.2",
+    "org.typelevel" %% "scalaz-outlaws" % "0.2",
+    "org.typelevel" %% "scalaz-scalatest" % "1.1.0" % Test,
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.15" % Test,
     "org.mockito" % "mockito-core" % "2.2.16" % Test,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
+    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M1" % Test
   )
 }
 

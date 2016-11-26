@@ -16,7 +16,74 @@
 
 package com.github.dnvriend
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import java.util.UUID
 
-abstract class TestSpec extends FlatSpec with Matchers with ScalaFutures
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
+import akka.stream.testkit.TestSubscriber
+import akka.stream.testkit.scaladsl.TestSink
+import akka.testkit.TestProbe
+import akka.util.Timeout
+import org.scalatest._
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.inject.BindingKey
+import play.api.test.WsTestClient
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
+import scala.util.Try
+
+class TestSpec extends FlatSpec
+    with Matchers
+    with GivenWhenThen
+    with OptionValues
+    with TryValues
+    with ScalaFutures
+    with WsTestClient
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with Eventually
+    with GuiceOneServerPerSuite {
+
+  def getComponent[A: ClassTag] = app.injector.instanceOf[A]
+  def getNamedComponent[A](name: String)(implicit ct: ClassTag[A]): A =
+    app.injector.instanceOf[A](BindingKey(ct.runtimeClass.asInstanceOf[Class[A]]).qualifiedWith(name))
+
+  // set the port number of the HTTP server
+  override lazy val port: Int = getNamedComponent[Int]("test.port")
+  implicit val timeout: Timeout = getComponent[Timeout]
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 30.seconds, interval = 300.millis)
+  implicit val system: ActorSystem = getComponent[ActorSystem]
+  implicit val ec: ExecutionContext = getComponent[ExecutionContext]
+  implicit val mat: Materializer = getComponent[Materializer]
+
+  implicit class PimpedFuture[T](self: Future[T]) {
+    def toTry: Try[T] = Try(self.futureValue)
+  }
+
+  def randomId = UUID.randomUUID.toString
+
+  implicit class PimpedByteArray(self: Array[Byte]) {
+    def getString: String = new String(self)
+  }
+
+  implicit class SourceOps[A](src: Source[A, _]) {
+    def testProbe(f: TestSubscriber.Probe[A] => Unit): Unit =
+      f(src.runWith(TestSink.probe(system)))
+  }
+
+  def killActors(actors: ActorRef*): Unit = {
+    val tp = TestProbe()
+    actors.foreach { (actor: ActorRef) =>
+      tp watch actor
+      actor ! PoisonPill
+      tp.expectTerminated(actor)
+    }
+  }
+
+  override protected def beforeEach(): Unit = {
+  }
+}

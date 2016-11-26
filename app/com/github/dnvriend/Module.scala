@@ -16,22 +16,31 @@
 
 package com.github.dnvriend
 
-import akka.actor.{ActorRef, ActorSystem}
+import javax.inject.Inject
+
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
+import akka.pattern.CircuitBreaker
 import akka.util.Timeout
 import com.github.dnvriend.component.bar.BarModelProvider
-import com.github.dnvriend.component.client.echoservice.{EchoServiceClient, EchoServiceClientProvider}
+import com.github.dnvriend.component.cache.Cache
+import com.github.dnvriend.component.client.echoservice.{DefaultEchoServiceClient, EchoServiceClient}
+import com.github.dnvriend.component.client.wsclient.WsClientProxy
 import com.github.dnvriend.component.foo.ServiceCProvider
 import com.github.dnvriend.component.foo.actor.FooActor
 import com.github.dnvriend.component.foo.service.{ServiceB, ServiceBImpl, ServiceC}
 import com.github.dnvriend.component.slick.SlickExecutionContext
-import com.google.inject.{AbstractModule, Provides}
 import com.google.inject.name.Names
+import com.google.inject.{AbstractModule, Provider, Provides}
+import play.api.Logger
 import play.api.libs.concurrent.AkkaGuiceSupport
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class Module extends AbstractModule with AkkaGuiceSupport {
+  val logger = Logger(this.getClass)
+
   override def configure(): Unit = {
     // bind ServiceB interface to the implementation, as alternative
     // to annotations
@@ -39,6 +48,13 @@ class Module extends AbstractModule with AkkaGuiceSupport {
       .annotatedWith(Names.named("bar-model"))
       .toProvider(classOf[BarModelProvider])
       .asEagerSingleton()
+
+    bind(classOf[Int])
+      .annotatedWith(Names.named("test.port"))
+      .toInstance(9001)
+
+    bind(classOf[Timeout])
+      .toInstance(Timeout(10.seconds))
 
     //    bind(classOf[Boolean])
     //      .annotatedWith(Names.named("clustered-bar-model"))
@@ -68,15 +84,27 @@ class Module extends AbstractModule with AkkaGuiceSupport {
    */
   @Provides
   def loggingAdapter(system: ActorSystem): LoggingAdapter = {
-    println(" !! ==> !! Providing a LoggingAdapter")
+    logger.info(" !! ==> !! Providing a LoggingAdapter")
     Logging(system, this.getClass)
   }
 
   @Provides
   def slickExecutionContextProvider(system: ActorSystem): SlickExecutionContext = {
-    println(" !! ==> !! Providing a SlickExecutionContext")
+    logger.info(" !! ==> !! Providing a SlickExecutionContext")
     val ec = system.dispatchers.lookup("slick.database-dispatcher")
     new SlickExecutionContext(ec)
+  }
+}
+
+class CacheProvider(system: ActorSystem, cacheActorName: String) extends Provider[ActorRef] {
+  override def get(): ActorRef =
+    system.actorOf(Props(new Cache(cacheActorName)))
+}
+
+class EchoServiceClientProvider @Inject() (wsClient: WsClientProxy)(implicit system: ActorSystem, ec: ExecutionContext) extends Provider[EchoServiceClient] {
+  override def get(): EchoServiceClient = {
+    val breaker = new CircuitBreaker(system.scheduler, 5, 10.seconds, 1.minute)
+    new DefaultEchoServiceClient(wsClient, breaker)
   }
 }
 

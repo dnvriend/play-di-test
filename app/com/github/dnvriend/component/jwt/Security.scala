@@ -1,15 +1,34 @@
+/*
+ * Copyright 2016 Dennis Vriend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.github.dnvriend.component.jwt
 
 import java.security._
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
-import com.github.nscala_time.time.Imports._
 
+import com.github.nscala_time.time.Imports._
 import com.github.dnvriend.util.Base64Ops._
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtJson}
 import play.api.Logger
 
+import scala.util.{Failure, Try}
+
 object Security {
   java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
+  final val Algorithm = JwtAlgorithm.RS256
 }
 
 // SHA-256 is a perfectly good secure hashing algorithm, quite suitable for use on certificates
@@ -35,23 +54,37 @@ class Security {
   }
 
   def generateJwtToken(privateKey: PrivateKey): String = {
-    val jwtToken = JwtJson.encode(JwtClaim(expiration = Option((DateTime.now() + 1.week).getMillis)), privateKey, JwtAlgorithm.RS256)
+    val expiration: Long = (DateTime.now() + 1.week).getMillis
+    val jwtToken = JwtJson.encode(JwtClaim(expiration = Option(expiration / 1000)), privateKey, Security.Algorithm)
     logger.debug(s"JwtToken:\n$jwtToken\n")
     jwtToken
   }
 
-  def testJwtToken(jwtToken: String, publicKey: PublicKey) = {
-    JwtJson.decode(jwtToken, publicKey, Seq(JwtAlgorithm.RS256))
+  def testJwtToken(jwtToken: String, publicKey: PublicKey): Try[JwtClaim] = {
+    JwtJson.decode(jwtToken, publicKey, Seq(Security.Algorithm))
   }
 
   def generateKeyPair: KeyPair = {
     val generatorEC = KeyPairGenerator.getInstance("RSA")
     generatorEC.initialize(2048, new SecureRandom())
     val keyPair: KeyPair = generatorEC.generateKeyPair()
-    val publicKey: String = publicKeyToString(keyPair.getPublic)
-    val privateKey: String = privateKeyToString(keyPair.getPrivate)
-    logger.debug(s"PublicKey:\n$publicKey\n")
-    logger.debug(s"PrivateKey:\n$privateKey\n")
     keyPair
+  }
+
+  def isExpired(jwtClaim: JwtClaim): Boolean = {
+    def expired(expirationTimeInSeconds: Long): Boolean =
+      expirationTimeInSeconds < (DateTime.now().getMillis / 1000)
+    jwtClaim.expiration.exists(expired)
+  }
+
+  def decode(token: String, publicKey: String): Try[JwtClaim] = {
+    JwtJson.decode(token, publicKey, Seq(Security.Algorithm)).map { jwtClaim =>
+      logger.info("JwtClaim: " + jwtClaim)
+      jwtClaim
+    }.recoverWith {
+      case t: Throwable =>
+        logger.error(s"Decoding token failed: ${t.getMessage}", t)
+        Failure(t)
+    }
   }
 }

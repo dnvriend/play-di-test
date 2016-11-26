@@ -19,20 +19,20 @@ package com.github.dnvriend.component.client
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.CircuitBreaker
 import akka.testkit.TestProbe
-import com.github.dnvriend.component.ComponentTestSpec
+import com.github.dnvriend.TestSpec
 import com.github.dnvriend.component.client.jwt.mock.MockJwtAuthenticationClient
 import com.github.dnvriend.component.client.jwt.model.{Session, SessionStateManager, Token}
 import com.github.dnvriend.component.client.jwt.{DefaultJwtAuthenticationClient, DefaultSessionService, JwtAuthenticationClient, SessionService}
 import com.github.dnvriend.component.client.mock.MockWsClientProxy
+import com.github.dnvriend.util.Base64Ops._
 import pdi.jwt.JwtAlgorithm
 import play.api.libs.json.{Format, Json}
 import play.api.libs.ws.WSResponse
-import com.github.dnvriend.util.Base64Ops._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class ClientTestSpec extends ComponentTestSpec {
+class ClientTestSpec extends TestSpec {
   val session = Session(Token("token"), Long.MaxValue)
 
   def withCircuitBreaker(

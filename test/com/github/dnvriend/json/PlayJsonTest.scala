@@ -127,10 +127,10 @@ class PlayJsonTest extends TestSpec {
     ) shouldBe a[JsValue]
   }
 
-//  it should "be an applicative" in {
-//    val validJson = """{"name":"foo","age":25}"""
-//    Json.parse(validJson).validate[Person] shouldBe JsSuccess(Person("foo", 25))
-//    val invalidJson = """{"name":"foo","age":"bar"}"""
-//    Json.parse(invalidJson).validate[Person] shouldBe a[JsError]
-//  }
+  //  it should "be an applicative" in {
+  //    val validJson = """{"name":"foo","age":25}"""
+  //    Json.parse(validJson).validate[Person] shouldBe JsSuccess(Person("foo", 25))
+  //    val invalidJson = """{"name":"foo","age":"bar"}"""
+  //    Json.parse(invalidJson).validate[Person] shouldBe a[JsError]
+  //  }
 }

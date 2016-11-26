@@ -16,12 +16,12 @@
 
 package com.github.dnvriend.component.client.echoservice
 
-import com.github.dnvriend.component.ComponentTestSpec
 import com.github.dnvriend.component.client.wsclient.DefaultWsClientProxy
 import com.github.dnvriend.model.Person
+import com.github.dnvriend.{EchoServiceClientProvider, TestSpec}
 import play.api.test.WsTestClient
 
-class EchoServiceClientTest extends ComponentTestSpec {
+class EchoServiceClientTest extends TestSpec {
 
   def withEchoService(f: EchoServiceClient => Unit): Unit =
     WsTestClient.withClient(client => f(new EchoServiceClientProvider(new DefaultWsClientProxy(client)).get()))
