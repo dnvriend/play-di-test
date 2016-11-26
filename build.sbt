@@ -21,6 +21,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
     "com.pauldijou" %% "jwt-core" % "0.9.2",
     "com.pauldijou" %% "jwt-play-json" % "0.9.2",
+    "com.github.nscala-time" %% "nscala-time" % "2.14.0",
     "org.scalaz" %% "scalaz-core" % "7.2.7",
     "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.14" % Test,
     "org.mockito" % "mockito-core" % "2.2.16" % Test,
