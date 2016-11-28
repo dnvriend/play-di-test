@@ -28,12 +28,14 @@ import com.github.dnvriend.component.client.wsclient.WsClientProxy
 import com.github.dnvriend.component.slick.SlickExecutionContext
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Provider, Provides}
+import play.api.Logger
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class Module extends AbstractModule with AkkaGuiceSupport {
+  val logger = Logger(this.getClass)
 
   override def configure(): Unit = {
     bind(classOf[Int])
@@ -48,12 +50,26 @@ class Module extends AbstractModule with AkkaGuiceSupport {
     * You don't really need this because Guice provides
     * java.util.logging.Logger that can be injected
     * into any class that needs a logger
+    *
+    * Also the best way to use logging is to use a combination
+    * - When in Actors extend the trait `ActorLogging`
+    * - When in Play then use `play.api.Logger` and use the companion object's method
+    *   to log to the logger with name `Application`.
+    * - If you want a named logger, then create a new logger by instantiating a play.api.Logger with
+    *   the name of the class eg. val logger = Logger(this.getClass) and use that
+    * - You could also use org.slf4j.Logger of course so instantiating that is also an option
+    *
+    * Phew, who knew logging could be so complicated
     */
   @Provides
   def loggingAdapter(system: ActorSystem): LoggingAdapter = {
     Logging(system, this.getClass)
   }
 
+  /**
+    * Only necessary if you use Slick. Having a choice is good and Play also supports
+    * Anorm and ScalikeJdbc so choose your poison!
+    */
   @Provides
   def slickExecutionContextProvider(system: ActorSystem): SlickExecutionContext = {
     val ec = system.dispatchers.lookup("slick.database-dispatcher")
