@@ -21,26 +21,26 @@ import java.util.Date
 
 import com.github.dnvriend.component.jwt.Security
 import com.google.inject.Inject
+import pdi.jwt.JwtClaim
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
+import PlayJsonToValidationNel._
+
 import scalaz._
 import Scalaz._
 
 object JwtSecurity {
   implicit val format = Json.format[JwtSecurity]
 }
-final case class JwtSecurity(publicKey: String, privateKey: String, jwtToken: String)
 
-object Token {
-  implicit val format = Json.format[Token]
-}
-final case class Token(token: String)
+final case class JwtSecurity(publicKey: String, privateKey: String, jwtToken: String)
 
 object TestToken {
   implicit val format = Json.format[TestToken]
 }
-final case class TestToken(token: String, publicKey: String)
+
+final case class TestToken(jwtToken: String, publicKey: String)
 
 object SecurityController {
   def format(time: Long): String =
@@ -70,34 +70,33 @@ class SecurityController @Inject() (security: Security) extends Controller {
     }.getOrElse(InternalServerError("Unknown error"))
   }
 
+  def decodeToken(testToken: TestToken): Disjunction[String, JwtClaim] = security.decode(testToken.jwtToken, testToken.publicKey)
+    .recoverWith {
+      case t: Throwable =>
+        logger.error("Could not decode JwtToken", t)
+        scala.util.Failure(t)
+    }.toDisjunction
+    .leftMap[String](t => s"There is a problem decoding the token: '$t'")
+
   def testToken = Action { request =>
-    logger.info("Testing your jwtToken with publicKey")
     // The effect we want to capture is the 'Disjunction', it can be either left or right
     val theEffectMaterializedAsDisjunction: Disjunction[String, Result] = for {
-      testToken <- request.body.asJson.map(_.as[TestToken]).toRightDisjunction("Could not unmarshal TestToken")
-      jwtClaim <- security.decode(testToken.token, testToken.publicKey)
-        .recoverWith {
-          case t: Throwable =>
-            logger.error("Could not decode JwtToken", t)
-            scala.util.Failure(t)
-        }.toDisjunction
-        .leftMap[String](t => s"There is a problem decoding the token: '$t'")
+      testToken <- request.body.asJson.map(_.validate[TestToken]).toValidationNel.disjunction.leftMap(_.toList.mkString(","))
+      jwtClaim <- decodeToken(testToken)
       expirationTime <- jwtClaim.expiration.toRightDisjunction("The JwtClaim has no expiration configured")
     } yield {
-      logger.info("Got jwtClaim " + jwtClaim)
-      logger.info(s"it will expire at ${SecurityController.format(expirationTime)}")
+      val formattedExpirationTime: String = SecurityController.format(expirationTime)
       if (security.isExpired(jwtClaim)) {
-        logger.warn(s"Your token has been expired since: ${SecurityController.format(expirationTime)}")
-        BadRequest(s"Your token has been expired since: ${SecurityController.format(expirationTime)}")
+        logger.warn(s"Your token has been expired since: $formattedExpirationTime")
+        BadRequest(s"Your token has been expired since: $formattedExpirationTime")
       } else {
         logger.info("Your token seems fine, put the publicKey in a .pub file")
         Ok(Json.toJson(testToken))
       }
     }
 
-    // observe the effect and react appropriately
     theEffectMaterializedAsDisjunction match {
-      case DRight(result) => result
+      case DRight(result)    => result
       case DLeft(validation) => BadRequest(validation)
     }
   }

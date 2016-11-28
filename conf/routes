@@ -1,3 +1,2 @@
-GET     /       com.github.dnvriend.component.foo.controller.FooController.get
-GET     /foo    com.github.dnvriend.component.foo.controller.FooController.get
-GET     /bar    com.github.dnvriend.component.bar.controller.BarController.get
+GET         /token             com.github.dnvriend.component.controller.SecurityController.getJwtSecurity
+POST        /token/test        com.github.dnvriend.component.controller.SecurityController.testToken

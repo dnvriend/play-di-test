@@ -20,9 +20,10 @@ import com.github.dnvriend.TestSpec
 import com.github.dnvriend.model.{Foo, Person}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
+import org.typelevel.scalatest.ValidationMatchers
 
 // https://www.playframework.com/documentation/2.5.x/ScalaJson
-class PlayJsonTest extends TestSpec {
+class PlayJsonTest extends TestSpec with ValidationMatchers {
   final val JsonString = """{"name":"foo","age":25}"""
 
   it should "convert to Json AST" in {
@@ -127,10 +128,36 @@ class PlayJsonTest extends TestSpec {
     ) shouldBe a[JsValue]
   }
 
-  //  it should "be an applicative" in {
-  //    val validJson = """{"name":"foo","age":25}"""
-  //    Json.parse(validJson).validate[Person] shouldBe JsSuccess(Person("foo", 25))
-  //    val invalidJson = """{"name":"foo","age":"bar"}"""
-  //    Json.parse(invalidJson).validate[Person] shouldBe a[JsError]
-  //  }
+  "PlayJson Validation" should "be converted to a Scalaz Validation to be an applicative" in {
+    import scalaz._
+    import Scalaz._
+
+    def validationToString(path: JsPath, xs: Seq[ValidationError]): String = {
+      val pathString = path.toString
+      val errorsString = xs.flatMap(_.messages).mkString(",")
+      s"'$pathString', '$errorsString'"
+    }
+
+    def validationErrorsToString(xs: Seq[(JsPath, Seq[ValidationError])]): String =
+      xs.map((validationToString _).tupled).mkString(",")
+
+    val validJson = """{"name":"foo","age":25}"""
+    Json.parse(validJson).validate[Person] shouldBe JsSuccess(Person("foo", 25))
+    val invalidJson = """{"name":"foo","age":"bar"}"""
+    Json.parse(invalidJson).validate[Person] shouldBe a[JsError]
+
+    //Either[Seq[(JsPath, Seq[ValidationError])], Person]
+    //Validation[Seq[(JsPath, Seq[ValidationError])], Person]
+    //Validation[String, Person]
+    //ValidationNel[String, Person]
+    val validatedPerson: ValidationNel[String, Person] =
+      Json.parse(invalidJson)
+        .validate[Person]
+        .asEither
+        .validation
+        .leftMap(validationErrorsToString)
+        .leftMap(_.wrapNel)
+
+    validatedPerson should haveFailure("'/age', 'error.expected.jsnumber'")
+  }
 }
