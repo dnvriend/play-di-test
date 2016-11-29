@@ -12,7 +12,7 @@
 
 
     <logger name="akka" level="info"/>
-    <logger name="com.github.dnvriend" level="info"/>
+    <logger name="com.github.dnvriend" level="debug"/>
 
     <root level="error">
         <appender-ref ref="console"/>

@@ -19,5 +19,9 @@ package com.github.dnvriend.component.controller
 import play.api.mvc.{Action, Controller}
 
 class PingController extends Controller {
-  def ping = Action(Ok("pong"))
+  def ping = Action { req =>
+    req.headers.get("auth")
+      .map(auth => Ok(s"pong - $auth"))
+      .getOrElse(Unauthorized)
+  }
 }

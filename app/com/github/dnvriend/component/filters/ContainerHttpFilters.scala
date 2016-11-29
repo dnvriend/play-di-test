@@ -77,9 +77,7 @@ class BasicAuthFilter @Inject() (implicit val mat: Materializer, ec: ExecutionCo
 
     result.rightMap {
       case (username, password) =>
-        nextFilter(requestHeader).map { result =>
-          result.withHeaders("auth" -> s"$username, $password")
-        }
+        nextFilter(requestHeader.copy(headers = requestHeader.headers.add("auth" -> s"$username, $password")))
     }.leftMap { xs =>
       println("Errors: " + "\n- " + xs.toList.mkString("\n- "))
     }.getOrElse(Future.successful(BasicAuthFilter.UnAuthorized))
