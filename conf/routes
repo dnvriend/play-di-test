@@ -1,2 +1,3 @@
+GET         /ping              com.github.dnvriend.component.controller.PingController.ping
 GET         /token             com.github.dnvriend.component.controller.SecurityController.getJwtSecurity
 POST        /token/test        com.github.dnvriend.component.controller.SecurityController.testToken

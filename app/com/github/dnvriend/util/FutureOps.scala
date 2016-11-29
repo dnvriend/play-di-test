@@ -16,18 +16,22 @@
 
 package com.github.dnvriend.util
 
-import java.io.{ByteArrayInputStream, InputStream}
-import java.util.Base64
+import play.api.mvc.{Result, Results}
 
-object Base64Ops {
-  implicit class ByteArrayImplicits(val that: Array[Byte]) extends AnyVal {
-    def encodeBase64: String = Base64.getEncoder.encodeToString(that)
-    def toInputStream: InputStream = new ByteArrayInputStream(that)
-    def asUtf8String: String = new String(that, "UTF-8")
+import scala.concurrent.{ExecutionContext, Future}
+
+object FutureOps extends Results {
+
+  implicit class FutureImplicits(val self: Future[_]) extends AnyVal {
+    def mapOk(message: String)(implicit ec: ExecutionContext): Future[Result] =
+      self.map(_ => Ok(message))
   }
 
-  implicit class StringImplicits(val that: String) extends AnyVal {
-    def parseBase64: Array[Byte] = Base64.getDecoder.decode(that)
-    def parseBase64Str: String = new String(parseBase64, "UTF-8")
+  implicit class ResultFutureImplicits(val self: Future[Result]) extends AnyVal {
+    def recoverInternalServerError(implicit ec: ExecutionContext): Future[Result] =
+      self.recover {
+        case e: Throwable =>
+          InternalServerError(e.getMessage)
+      }
   }
 }
